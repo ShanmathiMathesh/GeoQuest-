@@ -1,0 +1,659 @@
+#include <SPI.h>
+#include "Adafruit_GFX.h"
+#include <MCUFRIEND_kbv.h>
+
+MCUFRIEND_kbv tft;
+
+#define LCD_CS A3 // Chip Select goes to Analog 3
+#define LCD_RS A2 // Command/Data goes to Analog 2
+#define LCD_WR A1 // LCD Write goes to Analog 1
+#define LCD_RD A0 // LCD Read goes to Analog 0
+#define LCD_RESET A4 // Can alternately just connect to Arduino's reset pin
+
+#define BUTTON_PIN_1 14
+#define BUTTON_PIN_2 15
+#define BUTTON_PIN_3 16
+#define BUTTON_PIN_4 17
+#define BUTTON_PIN_5 18
+#define BUTTON_PIN_6 19
+#define BUTTON_PIN_7 20
+#define BUTTON_PIN_8 21
+#define BUTTON_PIN_9 22
+#define BUTTON_PIN_10 23
+#define BUTTON_PIN_11 24
+#define BUTTON_PIN_12 25
+#define BUTTON_PIN_13 26
+#define BUTTON_PIN_14 27
+#define BUTTON_PIN_15 28
+#define BUTTON_PIN_16 29
+#define BUTTON_PIN_17 30
+#define BUTTON_PIN_18 31
+#define BUTTON_PIN_19 32
+#define BUTTON_PIN_20 33
+#define WHITE  0xFFFF
+#define BLACK  0x0000
+#define BLUE 0x001F
+#define RED 0xF800
+#define GREEN 0x07E0
+#define TS_XP A1
+#define TS_YP A2
+#define TS_XM A3
+#define TS_YM A4
+#define TS_MINPRESSURE 10
+#define TS_MAXPRESSURE 1000
+int player=0;
+int score=0;
+int players[5];
+void setup() {
+  Serial.begin(9600);
+  uint32_t when = millis();
+  if (!Serial) delay(5000);
+  tft.begin(0x9481); 
+  tft.setRotation(1); 
+  pinMode(BUTTON_PIN_1, INPUT_PULLUP);
+  pinMode(BUTTON_PIN_2, INPUT_PULLUP);
+  pinMode(BUTTON_PIN_3, INPUT_PULLUP);
+  pinMode(BUTTON_PIN_4, INPUT_PULLUP);
+  pinMode(BUTTON_PIN_5, INPUT_PULLUP);
+  pinMode(BUTTON_PIN_6, INPUT_PULLUP);
+  pinMode(BUTTON_PIN_7, INPUT_PULLUP);
+  pinMode(BUTTON_PIN_8, INPUT_PULLUP);
+  pinMode(BUTTON_PIN_9, INPUT_PULLUP);
+  pinMode(BUTTON_PIN_10, INPUT_PULLUP);
+  pinMode(BUTTON_PIN_11, INPUT_PULLUP);
+  pinMode(BUTTON_PIN_12, INPUT_PULLUP);
+  pinMode(BUTTON_PIN_13, INPUT_PULLUP);
+  pinMode(BUTTON_PIN_14, INPUT_PULLUP);
+  pinMode(BUTTON_PIN_15, INPUT_PULLUP);
+  pinMode(BUTTON_PIN_16, INPUT_PULLUP);
+  pinMode(BUTTON_PIN_17, INPUT_PULLUP);
+  pinMode(BUTTON_PIN_18, INPUT_PULLUP);
+  pinMode(BUTTON_PIN_19, INPUT_PULLUP);
+  pinMode(BUTTON_PIN_20, INPUT_PULLUP);
+
+  tft.fillScreen(BLACK);
+  tft.setTextSize(5);
+  tft.setTextColor(BLUE);
+  tft.setCursor(180,100); 
+  tft.print("GLOBE");
+  tft.setTextColor(BLUE);
+  tft.setCursor(140, 150);
+  tft.print("EXPLORER");
+  tft.setTextSize(2);
+  tft.setTextColor(GREEN);
+  tft.setCursor(180, 220);
+  tft.print("Let's Explore!");
+  delay(2000); 
+  for (int i = 0; i < 4; i++) {
+    players[i] = 0;
+  }
+} 
+  void displayQuestion(int questionNumber, String questionText)
+  {
+  tft.fillScreen(WHITE);
+  tft.setTextSize(3);
+  tft.setTextColor(RED);
+  tft.setCursor(180, 30);
+  tft.print("QUESTION " + String(questionNumber) + ":");
+  tft.setTextSize(2);
+  tft.setTextColor(BLACK);
+  tft.setCursor(10, 80);
+  tft.print(questionText);
+  tft.setTextColor(RED);
+  tft.setCursor(10, 220);
+  tft.print("* PRESS THE CORRECT OPTION ");
+  delay(1000);
+}
+
+void handleOption(String correctOption) {
+  String selectedOption = "";
+  while (selectedOption == "") {
+    if (digitalRead(BUTTON_PIN_18) == LOW) selectedOption = "A";
+    else if (digitalRead(BUTTON_PIN_19) == LOW) selectedOption = "B";
+    else if (digitalRead(BUTTON_PIN_20) == LOW) selectedOption = "C";
+  }
+  displayAnswer(selectedOption, correctOption);
+}
+
+void displayAnswer(String selectedOption, String correctOption) {
+  tft.fillScreen(WHITE);
+  tft.setTextSize(3);
+  tft.setTextColor(RED);
+  tft.setCursor(180, 30);
+  tft.print("Your Answer:");
+  tft.setTextSize(2);
+  tft.setTextColor(BLACK);
+  tft.setCursor(10, 80);
+  tft.print("You selected Option " + selectedOption);
+
+  if (selectedOption == correctOption) {
+    tft.setTextColor(GREEN);
+    tft.setCursor(10, 120);
+    tft.print("Correct! " + correctOption + ") is the right answer.");
+    score++;
+  } else {
+    tft.setTextColor(RED);
+    tft.setCursor(10, 120);
+    tft.print("Incorrect. The correct answer is " + correctOption + ").");
+  }
+  delay(1500);
+  tft.fillScreen(BLACK);
+}
+
+void displayLeaderboard() {
+  tft.fillScreen(BLACK);
+  tft.setTextSize(2);
+  tft.setTextColor(BLUE);
+  tft.setCursor(180, 30);
+  tft.print("LEADERBOARD:");
+
+  for (int i = 0; i < 4; ++i) 
+  {
+  tft.setCursor(180, 70 + i * 30);
+  tft.print("EXPLORER" + String(i + 1) + " : " + String(players[i]));
+  }
+  delay(5000); 
+  tft.fillScreen(BLACK);
+}
+
+void loop() {
+  // 1.NEWYORK
+  if (digitalRead(BUTTON_PIN_1) == LOW) {
+    tft.fillScreen(WHITE);
+    tft.setTextSize(3);
+    tft.setTextColor(RED);
+    tft.setCursor(180,30);
+    tft.print("NEW YORK");
+    tft.setTextSize(2);
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,80);
+    tft.print("* COUNTRY: United States");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,120);
+    tft.print("* LANGUAGE: American English");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,160);
+    tft.print("* SPORTS:Baseball and American football");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,200);
+    tft.print("* CURRENCY:Dollar");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,240); 
+    tft.print("* UNIQUENESS : United Nations Headquarters is located in New York City");
+    delay(8000);
+    tft.fillScreen(BLACK);
+     tft.setTextSize(3);
+    tft.setTextColor(GREEN);
+    tft.setCursor(70,130);
+    tft.print("CONTINUE THE GAME...");
+  }
+//2-BERMUDA
+  if (digitalRead(BUTTON_PIN_2) == LOW) {
+   tft.fillScreen(WHITE);
+    tft.setTextSize(3);
+    tft.setTextColor(RED);
+    tft.setCursor(180,30);
+    tft.print("BERMUDA TRIANGLE");
+    tft.setTextSize(2);
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,80);
+    tft.print("* DANGEROUS PLACE ");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,120); 
+    tft.print("* LOCATION : Western part of the north atlantic ocean");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,160); 
+    tft.print("* CONNECTING THREE POINTS : Miami , Bermuda , San Juan.");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,200);
+    tft.print("* REASON FOR DANGEROUS : Mysterious disappearance of flights and ships");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,240);
+    tft.print("PENALTY : GO BACK THREE STEPS");
+    delay(8000);
+    tft.fillScreen(BLACK);
+    tft.setTextSize(3);
+    tft.setTextColor(GREEN);
+    tft.setCursor(70,130);
+    tft.print("CONTINUE THE GAME...");
+  }
+  //3-SNAKE ISLAND
+  if (digitalRead(BUTTON_PIN_3) == LOW) {
+   tft.fillScreen(WHITE);
+    tft.setTextSize(3);
+    tft.setTextColor(RED);
+    tft.setCursor(180,30);
+    tft.print("SNAKE ISLAND");
+    tft.setTextSize(2);
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,80);
+    tft.print("* DANGEROUS PLACE ");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,120);
+    tft.print("* LOCATION : South atlantic ocean ");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,160);
+    tft.print("* Snake Island, officially known as Ilha da Queimada Grande");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,200);
+    tft.print("* REASON FOR DANGEROUS : Large number of snakes");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,210);
+    tft.print("* PENALTY : Your left player should ask a question. Answer it correctly else go back to beginning of the game");
+    delay(8000);
+    tft.fillScreen(BLACK);
+    tft.setTextSize(3);
+    tft.setTextColor(GREEN);
+    tft.setCursor(70,130);
+    tft.print("CONTINUE THE GAME...");
+  }
+  //4-ICELAND
+  if (digitalRead(BUTTON_PIN_4) == LOW) {
+    tft.fillScreen(WHITE);
+    tft.setTextSize(3);
+    tft.setTextColor(RED);
+    tft.setCursor(180,30);
+    tft.print("ICELAND");
+    tft.setTextSize(2);
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,80);
+    tft.print("* CAPITAL: Reykjavik.");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,120);
+    tft.print("* NATIONAL BIRD: Gyrfalcon Bird");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,160);
+    tft.print("* NATIONAL GAME: Soccer");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,200);
+    tft.print("* NATIONAL LANGUAGE: Icelandic");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,200);
+    tft.print("* UNIQUENESS : First country in the world to have democratically elected female Head of State");
+    delay(8000);
+    tft.fillScreen(BLACK);
+     tft.setTextSize(3);
+    tft.setTextColor(GREEN);
+    tft.setCursor(70,130);
+    tft.print("CONTINUE THE GAME...");
+  }
+ //5- CAPETOWN
+ if (digitalRead(BUTTON_PIN_5) == LOW) {
+    tft.fillScreen(WHITE);
+    tft.setTextSize(3);
+    tft.setTextColor(RED);
+    tft.setCursor(180,30);
+    tft.print("CAPETOWN");
+    tft.setTextSize(2);
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,80);
+    tft.print("* CAPITAL: Pretoria");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,120);
+    tft.print("*NATIONAL BIRD: Blue Crane ");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,160);
+    tft.print("* ANIMAL: Springbok");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,200);
+    tft.print("* NATIONAL GAME:Rugby");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,240);
+    tft.print("* UNIQUENESS : Capetown international airport has consistently been recognised as one of the best airport in Africa");
+    delay(8000);
+    tft.fillScreen(BLACK);
+    tft.setTextSize(3);
+    tft.setTextColor(GREEN);
+    tft.setCursor(70,130);
+    tft.print("CONTINUE THE GAME...");
+  }
+  //6- MAIDIVES 
+if (digitalRead(BUTTON_PIN_6) == LOW) {
+    tft.fillScreen(WHITE);
+    tft.setTextSize(3);
+    tft.setTextColor(RED);
+    tft.setCursor(180,30);
+    tft.print("MALDIVES");
+    tft.setTextSize(2);
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,80);
+    tft.print("* CAPITAL: Male");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,120); 
+    tft.print("* LANGUAGE: Dhivehi");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,120); 
+    tft.print("*NATIONAL BIRD: Kanbili-white breasted water-hen");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,160);
+    tft.print("* ANIMAL: Yellowfin tuna");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,160); 
+    tft.print("* SPORT :Foot ball");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,200);
+    tft.print("* UNIQUENESS : It is home to the world's first under water hotel");
+    delay(8000);
+    tft.fillScreen(BLACK);
+    tft.setTextSize(3);
+    tft.setTextColor(GREEN);
+    tft.setCursor(70,130);
+    tft.print("CONTINUE THE GAME...");
+  }  
+  //7-INDIA
+  if (digitalRead(BUTTON_PIN_7) == LOW) {
+    tft.fillScreen(WHITE);
+    tft.setTextSize(3);
+    tft.setTextColor(RED);
+    tft.setCursor(180,30);
+    tft.print("INDIA"); 
+    tft.setTextSize(2);
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,80); 
+    tft.print("* BEAUTIFUL PLACE ");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,120); 
+    tft.print("* CAPITAL: New Delhi");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,160);
+    tft.print("* UNIQUENESS :the first country land a  spacecraft on the moon's south pole");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,200);
+    tft.print("* CURRENCY: Rupee");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,240);
+    tft.print("* SPORT: Hockey");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,240);
+    tft.print("* REWARD : Chance to roll the die again");
+    delay(8000);
+    tft.fillScreen(BLACK);
+    tft.setTextSize(3);
+    tft.setTextColor(GREEN);
+    tft.setCursor(70,130);
+    tft.print("CONTINUE THE GAME...");
+  }
+  //8 - CHINA
+  
+  if (digitalRead(BUTTON_PIN_8) == LOW) {
+    tft.fillScreen(WHITE);
+    tft.setTextSize(3);
+    tft.setTextColor(RED);
+    tft.setCursor(180,30);
+    tft.print("CHINA");
+    tft.setTextSize(2);
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,80);
+    tft.print("* CAPITAL: Beijing");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,120); 
+    tft.print("* LANGUAGE: Mandarin");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,160);
+    tft.print("* ANIMAL: Symbol of china (Brant Panda)");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,200);
+    tft.print("* WONDER: Great Wall of China");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,240); 
+    tft.print("* UNIQUENESS : Three Gorges Dam completed in 2006, is the world's largest Hydroelectric Power Station");
+    delay(10000);
+    tft.fillScreen(BLACK);
+    tft.setTextSize(3);
+    tft.setTextColor(GREEN);
+    tft.setCursor(70,130);
+    tft.print("CONTINUE THE GAME...");
+  }
+
+  //9- MARIANA TRENCH
+  
+   if (digitalRead(BUTTON_PIN_9) == LOW) {
+    tft.fillScreen(WHITE);
+    tft.setTextSize(3);
+    tft.setTextColor(RED);
+    tft.setCursor(180,30); 
+    tft.print("MARIANA TRENCH");
+    tft.setTextSize(2);
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,80); 
+    tft.print("* DANGEROUS PLACE");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,120);
+    tft.print("* DEPTH : 10,994 meters");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,160);
+    tft.print("* LOCATION: western pacific ocean");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,80);
+    tft.print("* World's Deepest Point on Ocean");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,210); // Set the cursor position for the second line
+    tft.print("* PENALTY : Your right side player should ask a question. Answer it correctly else go back to beginning of the game");
+    delay(8000);
+    tft.fillScreen(BLACK);
+    tft.setTextSize(3);
+    tft.setTextColor(GREEN);
+    tft.setCursor(70,130);
+    tft.print("CONTINUE THE GAME...");
+  }
+  //10-MEXICo
+  if (digitalRead(BUTTON_PIN_10) == LOW) {
+    tft.fillScreen(WHITE);
+    tft.setTextSize(3);
+    tft.setTextColor(RED);
+    tft.setCursor(180,30);
+    tft.print("MEXICO");
+    tft.setTextSize(2);
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,80);
+    tft.print("* CAPITAL: MEXICO CITY");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,120); 
+    tft.print("* LANGUAGE: SPANISH");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,160);
+    tft.print("* NATIONAL ANIMAL: GOLDEN EAGLE");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,200);
+    tft.print("* WONDER: CHICHEN ITZA");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,240); 
+    tft.print("* UNIQUENESS : Three Gorges Dam completed in 2006, is the world's largest Hydroelectric Power Station");
+    delay(8000);
+    tft.fillScreen(BLACK);
+    tft.setTextSize(3);
+    tft.setTextColor(GREEN);
+    tft.setCursor(70,130);
+    tft.print("CONTINUE THE GAME...");
+  }
+  //11-PERU
+  if (digitalRead(BUTTON_PIN_11) == LOW) {
+    tft.fillScreen(WHITE);
+    tft.setTextSize(3);
+    tft.setTextColor(RED);
+    tft.setCursor(180,30);
+    tft.print("PERU");
+    tft.setTextSize(2);
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,80);
+    tft.print("* BEAUTIFUL PLACE");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,120); 
+    tft.print("* WONDER: MACHU PICCHU");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,160);
+    tft.print("* NATIONAL ANIMAL: VICUNA");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,200);
+    tft.print("* NATIONAL SPORT: SOCCER");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,240); 
+    tft.print("* REWARD:");
+    delay(8000);
+    tft.fillScreen(BLACK);
+    tft.setTextSize(3);
+    tft.setTextColor(GREEN);
+    tft.setCursor(70,130);
+    tft.print("CONTINUE THE GAME...");
+  }
+  //12-ITALY
+  if (digitalRead(BUTTON_PIN_12) == LOW) {
+    tft.fillScreen(WHITE);
+    tft.setTextSize(3);
+    tft.setTextColor(RED);
+    tft.setCursor(180,30);
+    tft.print("ITALY");
+    tft.setTextSize(2);
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,80);
+    tft.print("* CAPITAL: ROME");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,120); 
+    tft.print("* NATIONAL BIRD: ITALIAN SPARROW");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,160);
+    tft.print("* NATIONAL ANIMAL: ITALIAN WOLF");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,200);
+    tft.print("* LANGUAGE: ITALIAN");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,240); 
+    tft.print("* UNIQUENESS : ");
+    delay(8000);
+    tft.fillScreen(BLACK);
+    tft.setTextSize(3);
+    tft.setTextColor(GREEN);
+    tft.setCursor(70,130);
+    tft.print("CONTINUE THE GAME...");
+  }
+  //13-UKRAINE
+  if (digitalRead(BUTTON_PIN_13) == LOW) {
+    tft.fillScreen(WHITE);
+    tft.setTextSize(3);
+    tft.setTextColor(RED);
+    tft.setCursor(180,30);
+    tft.print("UKRAINE");
+    tft.setTextSize(2);
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,80);
+    tft.print("* CAPITAL: KIEV");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,120); 
+    tft.print("* NATIONAL BIRD: WHITE STORK");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,160);
+    tft.print("* NATIONAL ANIMAL: EUROPEAN BISON");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,200);
+    tft.print("* CURRENCY:UKRAINIAN HRYVNIA");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,240); 
+    tft.print("* UNIQUENESS : SECOND DEEPEST SUBWAY STATION IN THE WORLD");
+    delay(8000);
+    tft.fillScreen(BLACK);
+    tft.setTextSize(3);
+    tft.setTextColor(GREEN);
+    tft.setCursor(70,130);
+    tft.print("CONTINUE THE GAME...");
+  }
+  //14-RUSSIA
+  if (digitalRead(BUTTON_PIN_14) == LOW) {
+    tft.fillScreen(WHITE);
+    tft.setTextSize(3);
+    tft.setTextColor(RED);
+    tft.setCursor(180,30);
+    tft.print("UKRAINE");
+    tft.setTextSize(2);
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,80);
+    tft.print("* CAPITAL: KIEV");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,120); 
+    tft.print("* NATIONAL BIRD: WHITE STORK");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,160);
+    tft.print("* NATIONAL ANIMAL: EUROPEAN BISON");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,200);
+    tft.print("* CURRENCY:UKRAINIAN HRYVNIA");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,240); 
+    tft.print("* UNIQUENESS : SECOND DEEPEST SUBWAY STATION IN THE WORLD");
+    delay(8000);
+    tft.fillScreen(BLACK);
+    tft.setTextSize(3);
+    tft.setTextColor(GREEN);
+    tft.setCursor(70,130);
+    tft.print("CONTINUE THE GAME...");
+  }
+  //15-AUSTRALIA
+  if (digitalRead(BUTTON_PIN_15) == LOW) {
+    tft.fillScreen(WHITE);
+    tft.setTextSize(3);
+    tft.setTextColor(RED);
+    tft.setCursor(180,30);
+    tft.print("UKRAINE");
+    tft.setTextSize(2);
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,80);
+    tft.print("* CAPITAL: KIEV");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,120); 
+    tft.print("* NATIONAL BIRD: WHITE STORK");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,160);
+    tft.print("* NATIONAL ANIMAL: EUROPEAN BISON");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,200);
+    tft.print("* CURRENCY:UKRAINIAN HRYVNIA");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,240); 
+    tft.print("* UNIQUENESS : SECOND DEEPEST SUBWAY STATION IN THE WORLD");
+    delay(8000);
+    tft.fillScreen(BLACK);
+    tft.setTextSize(3);
+    tft.setTextColor(GREEN);
+    tft.setCursor(70,130);
+    tft.print("CONTINUE THE GAME...");
+  }
+  //16.HAWAII
+  if (digitalRead(BUTTON_PIN_16) == LOW) {
+    tft.fillScreen(WHITE);
+    tft.setTextSize(3);
+    tft.setTextColor(RED);
+    tft.setCursor(180,30);
+    tft.print("HAWAII");
+    tft.setTextSize(2);
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,80);
+    tft.print("* CAPITAL: HONOLULU");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,120); 
+    tft.print("* NATIONAL BIRD: THE NENE");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,160);
+    tft.print("* NATIONAL ANIMAL: HAWAIIAN MONK");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,200);
+    tft.print("* NATIONAL SPORT : OUTRIGGER CANOE \n\nPADDLING");
+    tft.setTextColor(BLACK);
+    tft.setCursor(10,240); 
+    tft.print("* UNIQUENESS : MOUNT WAIALEALE IS THE \n\n WETTEST PLACE IN THE WORLD");
+    delay(8000);
+    tft.fillScreen(BLACK);
+    tft.setTextSize(3);
+    tft.setTextColor(GREEN);
+    tft.setCursor(70,130);
+    tft.print("CONTINUE THE GAME...");
+  }
+  //17.newzealand
+  if (digitalRead(BUTTON_PIN_17) == LOW)
+  {
+    player++;
+    score = 0;
+    tft.setTextColor(BLACK);
+    displayQuestion(1, "*HOW MANY WONDERS IN THE WORLD?\n\nA)SIX\n\nB)SEVEN\n\nC)FOUR");
+    handleOption("B");
+    displayQuestion(2, "*WHICH COUNTRY IS 1ST LANDED ON MOON'S SOUTH POLE?\n\nA)AMERICA \n\n B)CHINA \n\n C)INDIA ");
+    handleOption("C");
+    displayQuestion(3, "*WHAT IS THE CAPITAL OF CHINA?\n\n A)BEIJING\n\nB)SHANGHAI\n\nC)NEWY
